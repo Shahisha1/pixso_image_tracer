@@ -6,83 +6,353 @@
 <title>Perfect Image Tracer</title>
 <script src="https://cdn.jsdelivr.net/npm/imagetracerjs@1.2.6/imagetracer_v1.2.6.js"></script>
 <style>
-*{box-sizing:border-box}body{margin:0;padding:18px;font:13px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#f6f7f9;color:#202124}
-h1{font-size:18px;margin:0}.sub{color:#70757a;font-size:12px;margin:5px 0 18px}.card{background:#fff;border:1px solid #e4e6e9;border-radius:10px;padding:14px;margin-bottom:12px}.title{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-bottom:10px;color:#555}
-.presets{display:grid;grid-template-columns:1fr 1fr;gap:7px}.preset{border:1px solid #d7d9dd;background:#fff;border-radius:7px;padding:8px;cursor:pointer;font-weight:600;font-size:11px}.preset.active{background:#1769e0;color:#fff;border-color:#1769e0}
-.row{margin:13px 0}.row:last-child{margin-bottom:0}label{display:flex;justify-content:space-between;font-size:12px;font-weight:600;margin-bottom:7px}.val{color:#1769e0}.hint{font-size:10px;color:#777;margin-top:5px}input[type=range]{width:100%;accent-color:#1769e0}input[type=checkbox]{accent-color:#1769e0}
-.check{display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer}.actions{display:flex;gap:8px}.btn{flex:1;border:0;border-radius:7px;padding:10px;font-weight:700;cursor:pointer}.primary{background:#1769e0;color:#fff}.secondary{background:#e9eaed;color:#25272a}.btn:disabled{opacity:.5;cursor:not-allowed}
-.progress{height:6px;background:#e2e4e8;border-radius:5px;overflow:hidden}.fill{height:100%;width:0;background:#1769e0;transition:width .2s}.status{font-size:11px;color:#666;text-align:center;margin-top:7px;min-height:14px}
-.alert{display:none;padding:9px 10px;border-radius:7px;margin-bottom:12px;font-size:11px}.alert.show{display:block}.info{background:#eaf2ff;color:#174ea6}.error{background:#fdeceb;color:#b3261e}.success{background:#e9f7ef;color:#137333}
-.stats{display:none;grid-template-columns:1fr 1fr;gap:7px;margin-top:10px}.stat{background:#f4f5f7;border-radius:7px;padding:8px;text-align:center}.stat b{display:block;color:#1769e0}.stat span{font-size:10px;color:#777}
+:root{
+  --bg:#f3f4f6;
+  --panel:#ffffff;
+  --panel-alt:#f8f9fb;
+  --border:#e2e5e9;
+  --border-strong:#cfd4da;
+  --text:#1d2127;
+  --muted:#69717d;
+  --accent:#1769e0;
+  --accent-dark:#0f55bd;
+  --accent-soft:#eaf2ff;
+  --danger:#b3261e;
+  --danger-soft:#fdeceb;
+  --success:#137333;
+  --success-soft:#e9f7ef;
+  --shadow:0 8px 24px rgba(26,32,44,.06);
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;font:12px -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Arial,sans-serif;color:var(--text);background:var(--bg)}
+body{padding:16px}
+button,input{font:inherit}
+button{appearance:none}
+.app{max-width:430px;margin:0 auto}
+.header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px}
+.brand{display:flex;gap:11px;align-items:center}
+.logo{width:36px;height:36px;border:1px solid var(--border);background:#fff;display:grid;place-items:center;box-shadow:var(--shadow)}
+.logo svg{width:21px;height:21px}
+h1{font-size:16px;line-height:1.2;margin:0;font-weight:700;letter-spacing:-.02em}
+.subtitle{font-size:11px;color:var(--muted);margin-top:3px}
+.version{font-size:10px;color:var(--muted);padding-top:2px}
+.notice{display:none;border:1px solid;padding:10px 11px;margin-bottom:12px;line-height:1.45}
+.notice.show{display:block}
+.notice.info{background:var(--accent-soft);border-color:#cfe0ff;color:#174ea6}
+.notice.error{background:var(--danger-soft);border-color:#f1c5c2;color:var(--danger)}
+.notice.success{background:var(--success-soft);border-color:#c7e6d0;color:var(--success)}
+.card{background:var(--panel);border:1px solid var(--border);box-shadow:var(--shadow);margin-bottom:10px}
+.card-head{display:flex;justify-content:space-between;align-items:center;padding:12px 13px;border-bottom:1px solid var(--border)}
+.card-title{font-size:11px;font-weight:750;text-transform:uppercase;letter-spacing:.075em}
+.card-meta{font-size:10px;color:var(--muted)}
+.card-body{padding:12px 13px}
+.presets{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}
+.preset{min-height:48px;text-align:left;border:1px solid var(--border-strong);background:var(--panel);padding:8px 9px;color:var(--text);cursor:pointer;transition:border-color .12s,background .12s,box-shadow .12s}
+.preset:hover{border-color:#aab3be;background:#fbfcfd}
+.preset.active{border-color:var(--accent);background:var(--accent-soft);box-shadow:inset 3px 0 0 var(--accent)}
+.preset strong{display:block;font-size:11px;margin-bottom:3px}
+.preset span{display:block;color:var(--muted);font-size:9.5px;line-height:1.25}
+.preset.active span{color:#315b94}
+.control{padding:10px 0;border-bottom:1px solid #edf0f2}
+.control:first-child{padding-top:0}
+.control:last-child{border-bottom:0;padding-bottom:0}
+.control-label{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;font-weight:650}
+.value{color:var(--accent);font-variant-numeric:tabular-nums}
+input[type=range]{display:block;width:100%;height:4px;margin:0;accent-color:var(--accent);cursor:pointer}
+.range-scale{display:flex;justify-content:space-between;color:#8a929c;font-size:9px;margin-top:5px}
+.toggle-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0}
+.toggle-copy strong{display:block;font-size:11px;margin-bottom:2px}
+.toggle-copy span{font-size:9.5px;color:var(--muted)}
+.switch{position:relative;width:34px;height:20px;flex:none}
+.switch input{opacity:0;width:0;height:0}
+.slider{position:absolute;inset:0;background:#cfd4da;cursor:pointer;transition:.15s}
+.slider:before{content:"";position:absolute;width:14px;height:14px;left:3px;top:3px;background:#fff;transition:.15s;box-shadow:0 1px 2px rgba(0,0,0,.18)}
+.switch input:checked + .slider{background:var(--accent)}
+.switch input:checked + .slider:before{transform:translateX(14px)}
+.action{padding-top:2px}
+.primary-action{width:100%;height:40px;border:1px solid var(--accent-dark);background:var(--accent);color:#fff;font-weight:700;cursor:pointer}
+.primary-action:hover{background:var(--accent-dark)}
+.secondary-action{width:100%;height:34px;border:1px solid var(--border-strong);background:#fff;color:var(--text);font-weight:650;cursor:pointer;margin-top:7px}
+.primary-action:disabled,.secondary-action:disabled,.preset:disabled,input:disabled{opacity:.5;cursor:not-allowed}
+.progress-wrap{margin-top:13px}
+.progress-track{height:5px;background:#e7e9ec;overflow:hidden}
+.progress-fill{height:100%;width:0;background:var(--accent);transition:width .2s ease}
+.status-line{display:flex;justify-content:space-between;gap:12px;margin-top:7px;font-size:10px;color:var(--muted)}
+.status-value{color:var(--text);text-align:right}
+.stats{display:none;grid-template-columns:1fr 1fr;border-top:1px solid var(--border);margin-top:12px}
+.stat{padding:10px;text-align:center}
+.stat+ .stat{border-left:1px solid var(--border)}
+.stat b{display:block;font-size:15px;line-height:1.1;color:var(--accent)}
+.stat span{display:block;color:var(--muted);font-size:9px;margin-top:3px;text-transform:uppercase;letter-spacing:.06em}
+.footer{display:flex;justify-content:space-between;color:#8a929c;font-size:9px;padding:3px 1px 0}
+@media(max-width:360px){body{padding:12px}.presets{grid-template-columns:1fr 1fr}.header{margin-bottom:11px}}
 </style>
 </head>
 <body>
-<h1>Perfect Image Tracer</h1>
-<div class="sub">Convert an image layer into editable vector artwork.</div>
-<div id="alert" class="alert"></div>
+<div class="app">
+  <header class="header">
+    <div class="brand">
+      <div class="logo" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none">
+          <path d="M7 4h10v5.2l-5 2.9-5-2.9V4Zm0 10.8 5 2.9 5-2.9V20H7v-5.2Z" stroke="currentColor" stroke-width="1.7"/>
+          <path d="M7 9.2 12 12l5-2.8M12 12v5.7" stroke="currentColor" stroke-width="1.7"/>
+        </svg>
+      </div>
+      <div>
+        <h1>Perfect Image Tracer</h1>
+        <div class="subtitle">Raster artwork to editable vectors</div>
+      </div>
+    </div>
+    <div class="version">v1.0</div>
+  </header>
 
-<div class="card"><div class="title">Trace preset</div>
-<div class="presets">
-<button class="preset active" data-preset="default">Default</button>
-<button class="preset" data-preset="sharp">Sharp</button>
-<button class="preset" data-preset="smooth">Smooth</button>
-<button class="preset" data-preset="detailed">Detailed</button>
-<button class="preset" data-preset="posterize">Posterize</button>
-<button class="preset" data-preset="custom">Custom</button>
-</div></div>
+  <div id="alert" class="notice"></div>
 
-<div class="card"><div class="title">Advanced settings</div>
-<div class="row"><label>Color sampling <span class="val" id="samplingVal">2</span></label><input id="sampling" type="range" min="0" max="5" value="2"><div class="hint">Lower values preserve more pixels.</div></div>
-<div class="row"><label>Number of colors <span class="val" id="colorsVal">16</span></label><input id="colors" type="range" min="2" max="256" value="16"></div>
-<div class="row"><label>Line threshold <span class="val" id="ltVal">1</span></label><input id="lt" type="range" min=".1" max="10" step=".1" value="1"></div>
-<div class="row"><label>Quadratic threshold <span class="val" id="qtVal">1</span></label><input id="qt" type="range" min=".1" max="10" step=".1" value="1"></div>
-<div class="row"><label class="check"><input id="right" type="checkbox" checked> Enhance right angles</label></div>
-<div class="row"><label class="check"><input id="posterize" type="checkbox"> Posterize output</label></div>
-</div>
+  <section class="card">
+    <div class="card-head">
+      <div class="card-title">Trace preset</div>
+      <div class="card-meta">Choose a starting point</div>
+    </div>
+    <div class="card-body">
+      <div class="presets">
+        <button class="preset active" data-preset="default"><strong>Default</strong><span>Balanced</span></button>
+        <button class="preset" data-preset="sharp"><strong>Sharp</strong><span>Hard edges</span></button>
+        <button class="preset" data-preset="smooth"><strong>Smooth</strong><span>Soft shapes</span></button>
+        <button class="preset" data-preset="detailed"><strong>Detailed</strong><span>More geometry</span></button>
+        <button class="preset" data-preset="posterize"><strong>Posterize</strong><span>Reduced colors</span></button>
+        <button class="preset" data-preset="custom"><strong>Custom</strong><span>Manual controls</span></button>
+      </div>
+    </div>
+  </section>
 
-<div class="card"><div class="title">Trace</div>
-<div class="actions"><button id="trace" class="btn primary">Trace Image</button><button id="close" class="btn secondary">Close</button></div>
-<div style="margin-top:12px"><div class="progress"><div id="fill" class="fill"></div></div><div id="status" class="status">Select one image layer in Pixso.</div></div>
-<div id="stats" class="stats"><div class="stat"><b id="paths">0</b><span>paths</span></div><div class="stat"><b id="statColors">0</b><span>colors</span></div></div>
+  <section class="card">
+    <div class="card-head">
+      <div class="card-title">Tracing controls</div>
+      <div class="card-meta">ImageTracerJS</div>
+    </div>
+    <div class="card-body">
+      <div class="control">
+        <div class="control-label"><span>Color sampling</span><span class="value" id="samplingVal">2</span></div>
+        <input id="sampling" type="range" min="0" max="5" value="2">
+        <div class="range-scale"><span>Preserve detail</span><span>Faster</span></div>
+      </div>
+      <div class="control">
+        <div class="control-label"><span>Number of colors</span><span class="value" id="colorsVal">16</span></div>
+        <input id="colors" type="range" min="2" max="256" value="16">
+        <div class="range-scale"><span>2</span><span>256</span></div>
+      </div>
+      <div class="control">
+        <div class="control-label"><span>Line threshold</span><span class="value" id="ltVal">1</span></div>
+        <input id="lt" type="range" min=".1" max="10" step=".1" value="1">
+        <div class="range-scale"><span>Fine</span><span>Simplified</span></div>
+      </div>
+      <div class="control">
+        <div class="control-label"><span>Quadratic threshold</span><span class="value" id="qtVal">1</span></div>
+        <input id="qt" type="range" min=".1" max="10" step=".1" value="1">
+        <div class="range-scale"><span>Detailed</span><span>Simplified</span></div>
+      </div>
+      <div class="toggle-row">
+        <div class="toggle-copy"><strong>Enhance right angles</strong><span>Preserve geometric corners</span></div>
+        <label class="switch"><input id="right" type="checkbox" checked><span class="slider"></span></label>
+      </div>
+      <div class="toggle-row">
+        <div class="toggle-copy"><strong>Posterize output</strong><span>Reduce color variation</span></div>
+        <label class="switch"><input id="posterize" type="checkbox"><span class="slider"></span></label>
+      </div>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="card-head">
+      <div class="card-title">Trace</div>
+      <div class="card-meta">Editable SVG output</div>
+    </div>
+    <div class="card-body action">
+      <button id="trace" class="primary-action">Trace selected layer</button>
+      <button id="close" class="secondary-action">Close plugin</button>
+      <div class="progress-wrap">
+        <div class="progress-track"><div id="fill" class="progress-fill"></div></div>
+        <div class="status-line"><span>Status</span><span id="status" class="status-value">Select one image layer in Pixso.</span></div>
+      </div>
+      <div id="stats" class="stats">
+        <div class="stat"><b id="paths">0</b><span>Paths</span></div>
+        <div class="stat"><b id="statColors">0</b><span>Colors</span></div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <span>Select one layer before tracing</span>
+    <span>Pixso</span>
+  </footer>
 </div>
 
 <script>
 const presets={
-default:{colorsampling:2,numberofcolors:16,ltres:1,qtres:1,pathomit:8,rightangleenhance:true,blurradius:0},
-sharp:{colorsampling:1,numberofcolors:24,ltres:1,qtres:.1,pathomit:4,rightangleenhance:true,blurradius:0},
-smooth:{colorsampling:2,numberofcolors:12,ltres:1.5,qtres:1.5,pathomit:10,rightangleenhance:false,blurradius:2},
-detailed:{colorsampling:2,numberofcolors:64,ltres:.5,qtres:.5,pathomit:0,rightangleenhance:true,blurradius:0},
-posterize:{colorsampling:0,numberofcolors:4,ltres:1,qtres:1,pathomit:8,rightangleenhance:false,blurradius:2}
+  default:{colorsampling:2,numberofcolors:16,ltres:1,qtres:1,pathomit:8,rightangleenhance:true,blurradius:0},
+  sharp:{colorsampling:1,numberofcolors:24,ltres:1,qtres:.1,pathomit:4,rightangleenhance:true,blurradius:0},
+  smooth:{colorsampling:2,numberofcolors:12,ltres:1.5,qtres:1.5,pathomit:10,rightangleenhance:false,blurradius:2},
+  detailed:{colorsampling:2,numberofcolors:64,ltres:.5,qtres:.5,pathomit:0,rightangleenhance:true,blurradius:0},
+  posterize:{colorsampling:0,numberofcolors:4,ltres:1,qtres:1,pathomit:8,rightangleenhance:false,blurradius:2}
 };
 const $=id=>document.getElementById(id);
-const controls={sampling:$('sampling'),colors:$('colors'),lt:$('lt'),qt:$('qt'),right:$('right'),posterize:$('posterize')};
+const controls={
+  sampling:$('sampling'),
+  colors:$('colors'),
+  lt:$('lt'),
+  qt:$('qt'),
+  right:$('right'),
+  posterize:$('posterize')
+};
 function setStatus(t){$('status').textContent=t}
-function progress(v,t){$('fill').style.width=Math.max(0,Math.min(100,v))+'%';if(t)setStatus(t)}
-function alertBox(t,type){const a=$('alert');a.className='alert show '+type;a.textContent=t}
-function busy(v){$('trace').disabled=v;document.querySelectorAll('.preset,input').forEach(e=>e.disabled=v)}
-function readOptions(){return{colorsampling:+controls.sampling.value,numberofcolors:+controls.colors.value,ltres:+controls.lt.value,qtres:+controls.qt.value,pathomit:8,rightangleenhance:controls.right.checked,blurradius:controls.posterize.checked?2:0,strokewidth:1,posterize:controls.posterize.checked}}
-function setPreset(name){document.querySelectorAll('.preset').forEach(b=>b.classList.toggle('active',b.dataset.preset===name));if(name==='custom')return;const p=presets[name];controls.sampling.value=p.colorsampling;controls.colors.value=p.numberofcolors;controls.lt.value=p.ltres;controls.qt.value=p.qtres;controls.right.checked=p.rightangleenhance;controls.posterize.checked=name==='posterize';updateLabels()}
-function updateLabels(){$('samplingVal').textContent=controls.sampling.value;$('colorsVal').textContent=controls.colors.value;$('ltVal').textContent=controls.lt.value;$('qtVal').textContent=controls.qt.value}
+function progress(v,t){
+  $('fill').style.width=Math.max(0,Math.min(100,v))+'%';
+  if(t)setStatus(t);
+}
+function alertBox(t,type){
+  const a=$('alert');
+  a.className='notice '+type+(t?' show':'');
+  a.textContent=t;
+}
+function busy(v){
+  $('trace').disabled=v;
+  document.querySelectorAll('.preset,input').forEach(e=>e.disabled=v);
+}
+function readOptions(){
+  return {
+    colorsampling:+controls.sampling.value,
+    numberofcolors:+controls.colors.value,
+    ltres:+controls.lt.value,
+    qtres:+controls.qt.value,
+    pathomit:8,
+    rightangleenhance:controls.right.checked,
+    blurradius:controls.posterize.checked?2:0,
+    strokewidth:1,
+    posterize:controls.posterize.checked
+  };
+}
+function updateLabels(){
+  $('samplingVal').textContent=controls.sampling.value;
+  $('colorsVal').textContent=controls.colors.value;
+  $('ltVal').textContent=controls.lt.value;
+  $('qtVal').textContent=controls.qt.value;
+}
+function setPreset(name){
+  document.querySelectorAll('.preset').forEach(b=>b.classList.toggle('active',b.dataset.preset===name));
+  if(name==='custom')return;
+  const p=presets[name];
+  controls.sampling.value=p.colorsampling;
+  controls.colors.value=p.numberofcolors;
+  controls.lt.value=p.ltres;
+  controls.qt.value=p.qtres;
+  controls.right.checked=p.rightangleenhance;
+  controls.posterize.checked=name==='posterize';
+  updateLabels();
+}
 document.querySelectorAll('.preset').forEach(b=>b.onclick=()=>setPreset(b.dataset.preset));
-Object.values(controls).forEach(c=>c.addEventListener('input',()=>{updateLabels();document.querySelectorAll('.preset').forEach(b=>b.classList.toggle('active',b.dataset.preset==='custom'))}));
-$('trace').onclick=()=>{alertBox('','info');$('alert').classList.remove('show');busy(true);progress(5,'Exporting selected layer…');parent.postMessage({pluginMessage:{type:'startTrace',options:readOptions()}},'*')};
+Object.values(controls).forEach(c=>c.addEventListener('input',()=>{
+  updateLabels();
+  document.querySelectorAll('.preset').forEach(b=>b.classList.toggle('active',b.dataset.preset==='custom'));
+}));
+
+$('trace').onclick=()=>{
+  alertBox('','info');
+  busy(true);
+  $('stats').style.display='none';
+  progress(5,'Exporting selected layer…');
+  parent.postMessage({pluginMessage:{type:'startTrace',options:readOptions()}},'*');
+};
 $('close').onclick=()=>parent.postMessage({pluginMessage:{type:'close'}},'*');
 
 window.onmessage=event=>{
- const msg=event.data&&event.data.pluginMessage;if(!msg)return;
- if(msg.type==='progress'){progress(msg.value,msg.message);return}
- if(msg.type==='error'){busy(false);progress(0,'Ready');alertBox(msg.message||'Something went wrong.','error');return}
- if(msg.type==='success'){progress(100,'Complete');$('paths').textContent=msg.pathCount||0;$('statColors').textContent=msg.colorCount||0;$('stats').style.display='grid';busy(false);alertBox(msg.message||'Tracing complete.','success');return}
- if(msg.type==='processImage'){
-   try{
-    if(typeof ImageTracer==='undefined')throw new Error('ImageTracerJS could not be loaded. Check network access and reopen the plugin.');
-    progress(30,'Decoding image…');
-    const bytes=new Uint8Array(msg.imageData),url=URL.createObjectURL(new Blob([bytes],{type:'image/png'})),img=new Image();
-    img.onload=()=>{try{const c=document.createElement('canvas');c.width=img.naturalWidth||img.width;c.height=img.naturalHeight||img.height;const ctx=c.getContext('2d',{willReadFrequently:true});ctx.drawImage(img,0,0);URL.revokeObjectURL(url);progress(55,'Tracing vector paths…');const svg=ImageTracer.imagedataToSVG(ctx.getImageData(0,0,c.width,c.height),msg.options||{}),count=(svg.match(/<path\b/g)||[]).length;progress(85,'Creating editable vectors…');parent.postMessage({pluginMessage:{type:'createSvg',svgData:svg,pathCount:count,colorCount:+((msg.options||{}).numberofcolors)||0,source:msg.source||null}},'*')}catch(e){busy(false);alertBox('Trace error: '+e.message,'error')}};img.onerror=()=>{URL.revokeObjectURL(url);busy(false);alertBox('Pixso exported the layer, but the plugin could not decode the PNG.','error')};img.src=url;
-   }catch(e){busy(false);alertBox('Trace error: '+e.message,'error')}
- }
+  const msg=event.data&&event.data.pluginMessage;
+  if(!msg)return;
+
+  if(msg.type==='progress'){
+    progress(msg.value,msg.message);
+    return;
+  }
+
+  if(msg.type==='error'){
+    busy(false);
+    progress(0,'Ready');
+    alertBox(msg.message||'Something went wrong.','error');
+    return;
+  }
+
+  if(msg.type==='success'){
+    progress(100,'Trace complete');
+    $('paths').textContent=msg.pathCount||0;
+    $('statColors').textContent=msg.colorCount||0;
+    $('stats').style.display='grid';
+    busy(false);
+    alertBox(msg.message||'Tracing complete.','success');
+    return;
+  }
+
+  if(msg.type==='processImage'){
+    try{
+      if(typeof ImageTracer==='undefined')throw new Error('ImageTracerJS could not be loaded. Check network access and reopen the plugin.');
+
+      progress(30,'Decoding image…');
+
+      const bytes=new Uint8Array(msg.imageData);
+      const url=URL.createObjectURL(new Blob([bytes],{type:'image/png'}));
+      const img=new Image();
+
+      img.onload=()=>{
+        try{
+          const c=document.createElement('canvas');
+          c.width=img.naturalWidth||img.width;
+          c.height=img.naturalHeight||img.height;
+          const ctx=c.getContext('2d',{willReadFrequently:true});
+          ctx.drawImage(img,0,0);
+          URL.revokeObjectURL(url);
+
+          progress(55,'Tracing vector paths…');
+
+          const svg=ImageTracer.imagedataToSVG(
+            ctx.getImageData(0,0,c.width,c.height),
+            msg.options||{}
+          );
+
+          const count=(svg.match(/<path\b/g)||[]).length;
+          progress(85,'Creating editable vectors…');
+
+          parent.postMessage({
+            pluginMessage:{
+              type:'createSvg',
+              svgData:svg,
+              pathCount:count,
+              colorCount:+((msg.options||{}).numberofcolors)||0,
+              source:msg.source||null
+            }
+          },'*');
+        }catch(e){
+          busy(false);
+          progress(0,'Ready');
+          alertBox('Trace error: '+e.message,'error');
+        }
+      };
+
+      img.onerror=()=>{
+        URL.revokeObjectURL(url);
+        busy(false);
+        progress(0,'Ready');
+        alertBox('Pixso exported the layer, but the plugin could not decode the PNG.','error');
+      };
+
+      img.src=url;
+    }catch(e){
+      busy(false);
+      progress(0,'Ready');
+      alertBox('Trace error: '+e.message,'error');
+    }
+  }
 };
-setPreset('default');updateLabels();
+
+setPreset('default');
+updateLabels();
 </script>
 </body>
 </html>
