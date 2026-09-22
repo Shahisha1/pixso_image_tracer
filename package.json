@@ -1,0 +1,26 @@
+{
+  "name": "pixso-perfect-image-tracer",
+  "version": "1.0.0",
+  "description": "A Pixso plugin that traces raster artwork into editable SVG vector layers using ImageTracerJS.",
+  "license": "MIT",
+  "keywords": [
+    "pixso",
+    "plugin",
+    "image-tracing",
+    "vector",
+    "svg",
+    "imagetracerjs"
+  ],
+  "scripts": {
+    "check": "node --check main.js",
+    "test": "npm run check"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Shahisha1/pixso_image_tracer.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Shahisha1/pixso_image_tracer/issues"
+  },
+  "homepage": "https://github.com/Shahisha1/pixso_image_tracer#readme"
+}
