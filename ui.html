@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Perfect Image Tracer</title>
+<script src="https://cdn.jsdelivr.net/npm/imagetracerjs@1.2.6/imagetracer_v1.2.6.js"></script>
+<style>
+*{box-sizing:border-box}body{margin:0;padding:18px;font:13px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#f6f7f9;color:#202124}
+h1{font-size:18px;margin:0}.sub{color:#70757a;font-size:12px;margin:5px 0 18px}.card{background:#fff;border:1px solid #e4e6e9;border-radius:10px;padding:14px;margin-bottom:12px}.title{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-bottom:10px;color:#555}
+.presets{display:grid;grid-template-columns:1fr 1fr;gap:7px}.preset{border:1px solid #d7d9dd;background:#fff;border-radius:7px;padding:8px;cursor:pointer;font-weight:600;font-size:11px}.preset.active{background:#1769e0;color:#fff;border-color:#1769e0}
+.row{margin:13px 0}.row:last-child{margin-bottom:0}label{display:flex;justify-content:space-between;font-size:12px;font-weight:600;margin-bottom:7px}.val{color:#1769e0}.hint{font-size:10px;color:#777;margin-top:5px}input[type=range]{width:100%;accent-color:#1769e0}input[type=checkbox]{accent-color:#1769e0}
+.check{display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer}.actions{display:flex;gap:8px}.btn{flex:1;border:0;border-radius:7px;padding:10px;font-weight:700;cursor:pointer}.primary{background:#1769e0;color:#fff}.secondary{background:#e9eaed;color:#25272a}.btn:disabled{opacity:.5;cursor:not-allowed}
+.progress{height:6px;background:#e2e4e8;border-radius:5px;overflow:hidden}.fill{height:100%;width:0;background:#1769e0;transition:width .2s}.status{font-size:11px;color:#666;text-align:center;margin-top:7px;min-height:14px}
+.alert{display:none;padding:9px 10px;border-radius:7px;margin-bottom:12px;font-size:11px}.alert.show{display:block}.info{background:#eaf2ff;color:#174ea6}.error{background:#fdeceb;color:#b3261e}.success{background:#e9f7ef;color:#137333}
+.stats{display:none;grid-template-columns:1fr 1fr;gap:7px;margin-top:10px}.stat{background:#f4f5f7;border-radius:7px;padding:8px;text-align:center}.stat b{display:block;color:#1769e0}.stat span{font-size:10px;color:#777}
+</style>
+</head>
+<body>
+<h1>Perfect Image Tracer</h1>
+<div class="sub">Convert an image layer into editable vector artwork.</div>
+<div id="alert" class="alert"></div>
+
+<div class="card"><div class="title">Trace preset</div>
+<div class="presets">
+<button class="preset active" data-preset="default">Default</button>
+<button class="preset" data-preset="sharp">Sharp</button>
+<button class="preset" data-preset="smooth">Smooth</button>
+<button class="preset" data-preset="detailed">Detailed</button>
+<button class="preset" data-preset="posterize">Posterize</button>
+<button class="preset" data-preset="custom">Custom</button>
+</div></div>
+
+<div class="card"><div class="title">Advanced settings</div>
+<div class="row"><label>Color sampling <span class="val" id="samplingVal">2</span></label><input id="sampling" type="range" min="0" max="5" value="2"><div class="hint">Lower values preserve more pixels.</div></div>
+<div class="row"><label>Number of colors <span class="val" id="colorsVal">16</span></label><input id="colors" type="range" min="2" max="256" value="16"></div>
+<div class="row"><label>Line threshold <span class="val" id="ltVal">1</span></label><input id="lt" type="range" min=".1" max="10" step=".1" value="1"></div>
+<div class="row"><label>Quadratic threshold <span class="val" id="qtVal">1</span></label><input id="qt" type="range" min=".1" max="10" step=".1" value="1"></div>
+<div class="row"><label class="check"><input id="right" type="checkbox" checked> Enhance right angles</label></div>
+<div class="row"><label class="check"><input id="posterize" type="checkbox"> Posterize output</label></div>
+</div>
+
+<div class="card"><div class="title">Trace</div>
+<div class="actions"><button id="trace" class="btn primary">Trace Image</button><button id="close" class="btn secondary">Close</button></div>
+<div style="margin-top:12px"><div class="progress"><div id="fill" class="fill"></div></div><div id="status" class="status">Select one image layer in Pixso.</div></div>
+<div id="stats" class="stats"><div class="stat"><b id="paths">0</b><span>paths</span></div><div class="stat"><b id="statColors">0</b><span>colors</span></div></div>
+</div>
+
+<script>
+const presets={
+default:{colorsampling:2,numberofcolors:16,ltres:1,qtres:1,pathomit:8,rightangleenhance:true,blurradius:0},
+sharp:{colorsampling:1,numberofcolors:24,ltres:1,qtres:.1,pathomit:4,rightangleenhance:true,blurradius:0},
+smooth:{colorsampling:2,numberofcolors:12,ltres:1.5,qtres:1.5,pathomit:10,rightangleenhance:false,blurradius:2},
+detailed:{colorsampling:2,numberofcolors:64,ltres:.5,qtres:.5,pathomit:0,rightangleenhance:true,blurradius:0},
+posterize:{colorsampling:0,numberofcolors:4,ltres:1,qtres:1,pathomit:8,rightangleenhance:false,blurradius:2}
+};
+const $=id=>document.getElementById(id);
+const controls={sampling:$('sampling'),colors:$('colors'),lt:$('lt'),qt:$('qt'),right:$('right'),posterize:$('posterize')};
+function setStatus(t){$('status').textContent=t}
+function progress(v,t){$('fill').style.width=Math.max(0,Math.min(100,v))+'%';if(t)setStatus(t)}
+function alertBox(t,type){const a=$('alert');a.className='alert show '+type;a.textContent=t}
+function busy(v){$('trace').disabled=v;document.querySelectorAll('.preset,input').forEach(e=>e.disabled=v)}
+function readOptions(){return{colorsampling:+controls.sampling.value,numberofcolors:+controls.colors.value,ltres:+controls.lt.value,qtres:+controls.qt.value,pathomit:8,rightangleenhance:controls.right.checked,blurradius:controls.posterize.checked?2:0,strokewidth:1,posterize:controls.posterize.checked}}
+function setPreset(name){document.querySelectorAll('.preset').forEach(b=>b.classList.toggle('active',b.dataset.preset===name));if(name==='custom')return;const p=presets[name];controls.sampling.value=p.colorsampling;controls.colors.value=p.numberofcolors;controls.lt.value=p.ltres;controls.qt.value=p.qtres;controls.right.checked=p.rightangleenhance;controls.posterize.checked=name==='posterize';updateLabels()}
+function updateLabels(){$('samplingVal').textContent=controls.sampling.value;$('colorsVal').textContent=controls.colors.value;$('ltVal').textContent=controls.lt.value;$('qtVal').textContent=controls.qt.value}
+document.querySelectorAll('.preset').forEach(b=>b.onclick=()=>setPreset(b.dataset.preset));
+Object.values(controls).forEach(c=>c.addEventListener('input',()=>{updateLabels();document.querySelectorAll('.preset').forEach(b=>b.classList.toggle('active',b.dataset.preset==='custom'))}));
+$('trace').onclick=()=>{alertBox('','info');$('alert').classList.remove('show');busy(true);progress(5,'Exporting selected layer…');parent.postMessage({pluginMessage:{type:'startTrace',options:readOptions()}},'*')};
+$('close').onclick=()=>parent.postMessage({pluginMessage:{type:'close'}},'*');
+
+window.onmessage=event=>{
+ const msg=event.data&&event.data.pluginMessage;if(!msg)return;
+ if(msg.type==='progress'){progress(msg.value,msg.message);return}
+ if(msg.type==='error'){busy(false);progress(0,'Ready');alertBox(msg.message||'Something went wrong.','error');return}
+ if(msg.type==='success'){progress(100,'Complete');$('paths').textContent=msg.pathCount||0;$('statColors').textContent=msg.colorCount||0;$('stats').style.display='grid';busy(false);alertBox(msg.message||'Tracing complete.','success');return}
+ if(msg.type==='processImage'){
+   try{
+    if(typeof ImageTracer==='undefined')throw new Error('ImageTracerJS could not be loaded. Check network access and reopen the plugin.');
+    progress(30,'Decoding image…');
+    const bytes=new Uint8Array(msg.imageData),url=URL.createObjectURL(new Blob([bytes],{type:'image/png'})),img=new Image();
+    img.onload=()=>{try{const c=document.createElement('canvas');c.width=img.naturalWidth||img.width;c.height=img.naturalHeight||img.height;const ctx=c.getContext('2d',{willReadFrequently:true});ctx.drawImage(img,0,0);URL.revokeObjectURL(url);progress(55,'Tracing vector paths…');const svg=ImageTracer.imagedataToSVG(ctx.getImageData(0,0,c.width,c.height),msg.options||{}),count=(svg.match(/<path\b/g)||[]).length;progress(85,'Creating editable vectors…');parent.postMessage({pluginMessage:{type:'createSvg',svgData:svg,pathCount:count,colorCount:+((msg.options||{}).numberofcolors)||0,source:msg.source||null}},'*')}catch(e){busy(false);alertBox('Trace error: '+e.message,'error')}};img.onerror=()=>{URL.revokeObjectURL(url);busy(false);alertBox('Pixso exported the layer, but the plugin could not decode the PNG.','error')};img.src=url;
+   }catch(e){busy(false);alertBox('Trace error: '+e.message,'error')}
+ }
+};
+setPreset('default');updateLabels();
+</script>
+</body>
+</html>
