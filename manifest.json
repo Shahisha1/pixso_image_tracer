@@ -1,0 +1,13 @@
+{
+  "name": "Perfect Image Tracer",
+  "id": "com.shahisha.pixso-perfect-image-tracer",
+  "editorType": ["pixso"],
+  "main": "./main.js",
+  "ui": "./ui.html",
+  "menu": [
+    {
+      "name": "Trace Image",
+      "command": "trace"
+    }
+  ]
+}
